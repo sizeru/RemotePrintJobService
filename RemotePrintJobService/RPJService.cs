@@ -37,8 +37,10 @@ namespace RemotePrintJobService
 
         protected override void OnStart(string[] args)
         {
-            LOG = new EventLog("Application");
-            LOG.Source = "RemotePrintJobService";
+            LOG = new EventLog("Application")
+            {
+                Source = "RemotePrintJobService",
+            };
             Configuration config;
             try
             {
@@ -124,6 +126,10 @@ namespace RemotePrintJobService
             string[] jobs = jobListContent.Split(new char[] { '\n' });
             foreach (string filename in jobs)
             {
+                if (filename.Length == 0)
+                {
+                    continue;
+                }
                 // Assume that all files returned by the server are valid
                 HttpResponseMessage file;
                 using (var request = new HttpRequestMessage(HttpMethod.Post, "file"))
