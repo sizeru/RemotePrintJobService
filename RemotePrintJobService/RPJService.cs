@@ -17,7 +17,7 @@ using System.Configuration;
 using PdfiumViewer;
 using System.Windows.Forms;
 using System.Drawing.Printing;
-
+using System.Reflection;
 
 namespace RemotePrintJobService
 {
@@ -42,7 +42,10 @@ namespace RemotePrintJobService
             Configuration config;
             try
             {
-                config = ConfigurationManager.OpenExeConfiguration("RemotePrintJobService.exe");
+                Assembly executingAssembly = Assembly.GetAssembly(typeof(ProjectInstaller));
+                string targetDir = executingAssembly.Location;
+                config = ConfigurationManager.OpenExeConfiguration(targetDir);
+                LOG.WriteEntry("Target dir: " + targetDir);
             }
             catch (Exception ex)
             {
@@ -117,7 +120,8 @@ namespace RemotePrintJobService
                 LOG.WriteEntry("Warning: Server returned a failure response code. Code: " + jobList.StatusCode + " | Body: " + jobList.Content);
                 return;
             }
-            string[] jobs = jobList.ToString().Split(new char[] { '\n' });
+            string jobListContent = await jobList.Content.ReadAsStringAsync();
+            string[] jobs = jobListContent.Split(new char[] { '\n' });
             foreach (string filename in jobs)
             {
                 // Assume that all files returned by the server are valid
@@ -137,7 +141,7 @@ namespace RemotePrintJobService
                 }
                 if (!file.IsSuccessStatusCode)
                 {
-                    LOG.WriteEntry("Server returned a failure response code wehn trying to retrieve file: " + filename + " | Code: " + file.StatusCode + " | Body: " + file.Content);
+                    LOG.WriteEntry("Server returned a failure response code when trying to retrieve file: " + filename + " | Code: " + file.StatusCode + " | Body: " + file.Content);
                     continue;
                 }
 
